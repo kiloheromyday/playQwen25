@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+
+# Local training outputs
+artifacts/
+*.pt
+*.pth
+*.safetensors
+
+# Temporary test directories
+tmp*/
+

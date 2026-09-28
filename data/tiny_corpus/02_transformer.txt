@@ -1,0 +1,4 @@
+Transformer 使用 attention 让每个位置读取前文的信息。
+RMSNorm 用来稳定 hidden state 的数值尺度。
+RoPE 把位置信息加入 query 和 key，使模型能够理解顺序。
+GQA 让多个 query head 共享较少的 key 和 value head。

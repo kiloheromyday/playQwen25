@@ -1,0 +1,4 @@
+预训练通常包括清洗数据、去重、tokenize、pack 和训练。
+训练指标包括 loss、PPL、tokens per second 和显存占用。
+一个小模型先在小数据上过拟合，是检查实现是否正确的好方法。
+多卡训练可以使用 DDP、FSDP、ZeRO 或 Megatron。
