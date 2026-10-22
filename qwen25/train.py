@@ -3,7 +3,7 @@ import math
 from pathlib import Path
 import random
 import time
-from typing import Iterable, Iterator
+from typing import Callable, Iterable, Iterator
 
 import torch
 from torch import Tensor, nn
@@ -79,6 +79,7 @@ def train_loader_steps(
     use_bf16: bool = False,
     scheduler=None,
     start_step: int = 0,
+    on_step: Callable[[TrainStats], None] | None = None,
 ) -> list[TrainStats]:
     """Train from a DataLoader without materializing the complete dataset in memory."""
     if steps <= 0:
@@ -92,6 +93,8 @@ def train_loader_steps(
     for local_step in range(1, steps + 1):
         total_loss = 0.0
         token_count = 0
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         started = time.perf_counter()
         for _ in range(grad_accumulation_steps):
             batch = next(iterator).to(device)
@@ -105,6 +108,8 @@ def train_loader_steps(
         if scheduler is not None:
             scheduler.step()
         optimizer.zero_grad(set_to_none=True)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
         elapsed = max(time.perf_counter() - started, 1e-9)
         stats.append(
             TrainStats(
@@ -115,21 +120,27 @@ def train_loader_steps(
                 learning_rate=optimizer.param_groups[0]["lr"],
             )
         )
+        if on_step is not None:
+            on_step(stats[-1])
     return stats
 
 
 @torch.no_grad()
 def evaluate_loss(model: nn.Module, batches: Iterable[Tensor], device: torch.device, use_bf16: bool = False) -> tuple[float, float]:
+    was_training = model.training
     model.eval()
     total_loss = 0.0
     total_tokens = 0
-    for batch in batches:
-        batch = batch.to(device)
-        with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=use_bf16):
-            loss = model(batch, labels=batch)["loss"]
-        tokens = batch.numel() - batch.size(0)
-        total_loss += float(loss) * tokens
-        total_tokens += tokens
+    try:
+        for batch in batches:
+            batch = batch.to(device)
+            with torch.autocast(device_type=device.type, dtype=torch.bfloat16, enabled=use_bf16):
+                loss = model(batch, labels=batch)["loss"]
+            tokens = batch.numel() - batch.size(0)
+            total_loss += float(loss) * tokens
+            total_tokens += tokens
+    finally:
+        model.train(was_training)
     if total_tokens == 0:
         raise ValueError("evaluation batches contain no target tokens")
     average_loss = total_loss / total_tokens

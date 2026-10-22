@@ -59,6 +59,8 @@ def main():
 
     if args.steps <= 0:
         raise ValueError("--steps must be positive")
+    if args.eval_interval <= 0:
+        raise ValueError("--eval-interval must be positive")
     set_seed(args.seed)
     device = torch.device(args.device)
     documents = load_text_documents(args.data)
@@ -103,17 +105,7 @@ def main():
     print("train/valid documents:", len(bundle.train_documents), len(bundle.valid_documents))
     print("train/valid sequences:", len(bundle.train_dataset), len(bundle.valid_dataset) if bundle.valid_dataset else 0)
     print("vocab size:", tokenizer.vocab_size)
-    for stats in train_loader_steps(
-        model,
-        train_loader,
-        optimizer,
-        steps=args.steps,
-        device=device,
-        grad_accumulation_steps=args.grad_accumulation,
-        use_bf16=args.bf16,
-        scheduler=scheduler,
-        start_step=start_step,
-    ):
+    def log_step(stats):
         if stats.step == start_step + 1 or stats.step % args.eval_interval == 0 or stats.step == start_step + args.steps:
             message = (
                 f"step={stats.step:04d} train_loss={stats.loss:.4f} "
@@ -123,6 +115,12 @@ def main():
                 valid_loss, valid_ppl = evaluate_loss(model, valid_loader, device, use_bf16=args.bf16)
                 message += f" valid_loss={valid_loss:.4f} valid_ppl={valid_ppl:.2f}"
             print(message)
+
+    train_loader_steps(
+        model, train_loader, optimizer, steps=args.steps, device=device,
+        grad_accumulation_steps=args.grad_accumulation, use_bf16=args.bf16,
+        scheduler=scheduler, start_step=start_step, on_step=log_step,
+    )
 
     final_step = start_step + args.steps
     metadata = {

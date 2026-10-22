@@ -1,0 +1,7 @@
+{
+  "name": "qwen25-local-lab",
+  "private": true,
+  "scripts": {"test:ui": "node scripts/test-ui.cjs"},
+  "dependencies": {"lucide": "^0.468.0"},
+  "devDependencies": {"playwright": "^1.56.0"}
+}

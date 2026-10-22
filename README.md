@@ -98,6 +98,10 @@ torchrun --standalone --nproc-per-node=GPU数量 main_ddp.py
 
 ## 推荐学习顺序
 
+本机完整小规模验证入口：`python main_local_smoke.py --steps 100 --device cuda`。
+运行结果写入 `artifacts/local_smoke/`，包括逐步指标、checkpoint 和 tokenizer。
+实际结果与解读见 [阶段6：本机小规模测试](notes/阶段6_本机小规模测试.md)。
+
 1. 先运行 `main_config.py`，理解配置如何决定张量形状。
 2. 运行 `main_tokenizer.py`，观察文字如何变成 token id。
 3. 运行 `main_components.py`，只看 RMSNorm、RoPE、GQA、SwiGLU 的输入输出。

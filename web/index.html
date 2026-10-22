@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Qwen Local Lab</title><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css"><script src="/icons.js" defer></script><script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/"><span class="brand-mark">Q</span><span>Qwen <small>LOCAL LAB</small></span></a>
+    <div class="workspace-label">实验工作区</div>
+    <nav aria-label="主导航">
+      <button class="nav-item active" data-view="chat"><i data-lucide="messages-square"></i>对话<span class="nav-index">01</span></button>
+      <button class="nav-item" data-view="evaluation"><i data-lucide="chart-no-axes-combined"></i>模型评测<span class="nav-index">02</span></button>
+      <button class="nav-item" data-view="training"><i data-lucide="activity"></i>训练记录<span class="nav-index">03</span></button>
+    </nav>
+    <div class="sidebar-model"><div class="eyebrow">当前模型</div><strong>Qwen2.5-style</strong><span>Tiny · 基础语言模型</span>
+      <dl><div><dt>参数量</dt><dd id="side-params">—</dd></div><div><dt>训练步数</dt><dd id="side-step">—</dd></div><div><dt>上下文</dt><dd id="side-context">—</dd></div></dl>
+      <div class="connection"><span class="status-dot"></span><span id="connection">连接中</span></div>
+    </div><div class="sidebar-footer"><i data-lucide="hard-drive"></i><span>本地推理 · FP32</span></div>
+  </aside>
+  <main>
+    <header class="topbar"><div><span class="breadcrumb">实验工作区</span><span class="slash">/</span><strong id="page-title">对话</strong></div><div class="device-badge"><span class="status-dot"></span><span id="device-name">本地模型</span></div></header>
+    <section id="view-chat" class="view active">
+      <div class="page-heading"><div><div class="eyebrow">MODEL PLAYGROUND</div><h1>和你的模型对话</h1></div><button class="icon-button" id="clear-chat" title="清空对话" aria-label="清空对话"><i data-lucide="trash-2"></i></button></div>
+      <div class="chat-grid"><div class="conversation-column">
+        <div class="model-notice"><i data-lucide="info"></i><p><strong>基础模型 · 未做指令微调</strong><span>仅训练了 3 篇教学短文。输出以文本续写为主，可能重复或无法回答问题。</span></p></div>
+        <div id="messages" class="messages" aria-live="polite"><div id="chat-empty" class="chat-empty"><span class="empty-symbol"><i data-lucide="message-circle"></i></span><h2>从一段熟悉的文字开始</h2><div class="prompt-list"><button data-prompt="预训练通常包括">预训练通常包括<i data-lucide="arrow-up-right"></i></button><button data-prompt="语言模型接收">语言模型接收<i data-lucide="arrow-up-right"></i></button><button data-prompt="Transformer 使用">Transformer 使用<i data-lucide="arrow-up-right"></i></button></div></div></div>
+        <form id="chat-form" class="composer"><label for="prompt" class="sr-only">消息内容</label><textarea id="prompt" rows="3" maxlength="10000" placeholder="输入消息或一段待续写的文字…" required></textarea><div class="composer-bottom"><span id="input-count">0 字符</span><button class="primary send" id="send-button" type="submit" title="发送消息"><i data-lucide="arrow-up"></i><span>发送</span></button></div></form><div id="chat-error" class="error" role="alert" hidden></div>
+      </div><aside class="settings-panel">
+        <div class="panel-heading"><h2>生成设置</h2><button id="reset-settings" class="icon-button small" aria-label="重置生成设置" title="重置生成设置"><i data-lucide="rotate-ccw"></i></button></div>
+        <label class="control-label">采样方式</label><div class="segmented"><button id="sampling" class="selected" type="button">采样</button><button id="greedy" type="button">贪心</button></div>
+        <div class="control"><label for="temperature">温度 <output id="temperature-value">0.70</output></label><input id="temperature" type="range" min="0.1" max="1.5" step="0.05" value="0.7"></div>
+        <div class="control"><label for="top-p">Top-p <output id="top-p-value">0.90</output></label><input id="top-p" type="range" min="0.1" max="1" step="0.05" value="0.9"></div>
+        <div class="control"><label for="penalty">重复惩罚 <output id="penalty-value">1.10</output></label><input id="penalty" type="range" min="1" max="1.8" step="0.05" value="1.1"></div>
+        <div class="number-row"><label for="max-tokens">最多生成 token</label><input type="number" id="max-tokens" min="1" max="96" value="48"></div>
+        <div class="number-row"><label for="seed">随机种子</label><input type="number" id="seed" min="0" max="2147483647" value="0"></div>
+        <label class="checkbox-row"><input id="use-history" type="checkbox" checked><span>包含对话历史</span></label>
+        <div class="settings-divider"></div><div class="eyebrow">最近一次生成</div><dl id="last-metrics" class="last-metrics"><div><dt>首 token 延迟</dt><dd>—</dd></div><div><dt>生成速度</dt><dd>—</dd></div><div><dt>输入未知字符</dt><dd>—</dd></div><div><dt>上下文截断</dt><dd>—</dd></div></dl>
+      </aside></div>
+    </section>
+    <section id="view-evaluation" class="view">
+      <div class="page-heading"><div><div class="eyebrow">MODEL EVALUATION</div><h1>多指标评测</h1></div><div class="actions"><button id="export-eval" class="icon-button" title="下载评测 JSON" aria-label="下载评测 JSON" disabled><i data-lucide="download"></i></button><button id="run-eval" class="primary"><i data-lucide="play"></i><span>运行评测</span></button></div></div>
+      <div class="evaluation-summary"><div><span class="eyebrow">EVALUATION PROTOCOL</span><h2>预测质量、数据覆盖与生成效率</h2><p>当前教学语料 · 按文档划分训练 / 验证 · 同结构随机模型作为基线</p></div><span id="eval-state" class="tag">尚未运行</span></div>
+      <details class="custom-input"><summary>添加独立评测文本 <i data-lucide="plus"></i></summary><label for="custom-text" class="sr-only">独立评测文本</label><textarea id="custom-text" rows="3" maxlength="20000" placeholder="放入没有参与训练的文本，单独查看 loss、命中率与未知字符比例。"></textarea></details>
+      <div id="eval-error" class="error" role="alert" hidden></div><p class="eval-progress" id="eval-progress" hidden>正在评估模型与随机基线，并运行固定续写样例…</p>
+      <div id="eval-empty" class="evaluation-empty"><i data-lucide="chart-column"></i><h2>评测结果</h2><p>当前模型：约 10 万参数 · 字符级词表 · 教学数据集</p></div>
+      <div id="eval-results" hidden><div id="metric-grid" class="metric-grid"></div>
+        <div class="section-title"><h2>逐项对比</h2><span>同一分词器、同一评测文本</span></div><div class="table-scroll"><table><thead><tr><th>数据集 / 模型</th><th>Loss ↓</th><th>PPL ↓</th><th>Top-1 ↑</th><th>Top-5 ↑</th><th>未知字符 ↓</th><th>预测目标数</th></tr></thead><tbody id="score-table"></tbody></table></div>
+        <div class="section-title"><h2>固定续写与运行效率</h2><span>贪心生成 · batch=1 · GPU 已预热</span></div><div id="probe-results" class="probe-list"></div>
+        <div class="section-title"><h2>指标说明</h2></div><div class="definitions">
+          <details><summary>Loss 与 PPL：预测真实文本的能力<i data-lucide="chevron-down"></i></summary><p>Loss 是真实下一个 token 概率的负自然对数平均值，越低越好。PPL = exp(loss)，只在相同分词器、文本和评测方法下比较。这里逐文档评估，分块之间重叠 1 个 token，并包含 EOS；和训练记录中的 packing 评估方法不同。</p></details>
+          <details><summary>Top-1 / Top-5：正确 token 排第几<i data-lucide="chevron-down"></i></summary><p>Top-1 是真实 token 得分排第一的比例，Top-5 是排在前五的比例。未知字符映射成同一个 UNK，也可能让命中率虚高。导出报告另外提供排除 UNK 目标后的 loss 和 Top-1。</p></details>
+          <details><summary>未知字符比例：模型究竟读懂了多少输入<i data-lucide="chevron-down"></i></summary><p>不在字符词表中的输入会变成 UNK。这个比例高时，模型拿不到原文信息，即使 loss 看起来低，也很难据此评价真正的语言能力。</p></details>
+          <details><summary>延迟、速度与显存：运行效率<i data-lucide="chevron-down"></i></summary><p>首 token 延迟从模型开始计算到第一个 token 选出；总速度为生成 token 数除以总生成秒数。计时包含采样并同步 GPU，不含浏览器和网络。显存是 PyTorch 峰值张量分配，包含模型，不等于驱动报告的总占用。短样本波动较大。</p></details>
+          <details><summary>重复率与样例：不能替代能力评测<i data-lucide="chevron-down"></i></summary><p>重复二元组比例 = 1 − 不重复相邻 token 对数 / 相邻 token 对总数。更低不一定更正确；随机乱码也可能不重复。两个续写样例只用于诊断，训练文本样例可能被记忆。当前模型没有进行指令微调，无法据此评价通用问答、推理或安全能力。</p></details>
+        </div>
+      </div>
+    </section>
+    <section id="view-training" class="view"><div class="page-heading"><div><div class="eyebrow">TRAINING HISTORY</div><h1>训练记录</h1></div><span class="tag">本地实验</span></div><div id="training-content"><p class="muted">正在读取训练记录…</p></div></section>
+    <footer class="page-footer"><span>Qwen Local Lab</span><span>本地教学实验 · <span id="footer-model">载入中</span></span></footer>
+  </main>
+</body>
+</html>
