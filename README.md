@@ -96,6 +96,23 @@ torchrun --standalone --nproc-per-node=GPU数量 main_ddp.py
 
 如果直接运行 `main_*.py` 时 Python 找不到本地包，请确认当前目录是项目根目录。
 
+## 对话与评测界面
+
+项目自带一个本地 Web 界面，可以在浏览器里和训练出的模型对话、查看多指标评测和训练记录。
+
+```powershell
+npm install
+python main_web.py --checkpoint artifacts/local_smoke_20261021/checkpoint.pt --device cuda
+```
+
+启动后访问 `http://127.0.0.1:8765`。首次使用需要先运行 `npm install` 安装 lucide 图标库。
+
+前端 UI 冒烟测试（桌面和手机两种宽度，覆盖对话、评测、训练曲线截图）：
+
+```powershell
+npm run test:ui
+```
+
 ## 推荐学习顺序
 
 本机完整小规模验证入口：`python main_local_smoke.py --steps 100 --device cuda`。
